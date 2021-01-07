@@ -1,6 +1,9 @@
 class UI {
   constructor () {
     this.profile = document.getElementById('profile')
+    this.currentRepoIdx = 0
+    this.numRepoStartingEntries = 5
+    this.numRepoLoadMore = 5
   }
   // ----------------------------------------------
   // Show Full Profile
@@ -37,39 +40,98 @@ class UI {
       </div>
     </div>
     <h3 class="page-heading mb-3">Latest Repos</h3>
-    <div id="repos"></div>
-    `
+    <div id="repos"></div>`
+  }
+  // ----------------------------------------------
+  // Show Repos when loading user for the FIRST TIME
+  showRepos(repos) {
+    // Reset currentRepoIdx every time the user search input is changed
+    this.currentRepoIdx = 0
+    // Instantiate
+    let output = ''
+    let IdxProgress
+    // Decide Index Progression for edge case (Indices exceeding in repo array)
+    if (repos.length < this.numRepoStartingEntries) {
+      IdxProgress = repos.length
+    } 
+    else  {
+      IdxProgress = this.numRepoStartingEntries
+    }
+    // Add entries to display
+    for (let i=0; i<IdxProgress; i++)  {
+      // Current idx in repos array
+      let repo = repos[i]
+      // Add entry html to output temp
+      output += `
+        <div class="card card-body mb-2">
+          <div class="row">
+            <div class="col-md-6">
+              <a href="${repo.html_url}" target="blank"></a>
+              ${repo.name}
+            </div>
+            <div class="col-md-6">
+              <span class="badge badge-primary mb-2">
+                Public Gists: ${repo.stargazers_count}
+              </span>
+              <span class="badge badge-primary mb-2">
+                Followers: ${repo.watchers}
+              </span>
+              <span class="badge badge-primary mb-2">
+                Public Repos: ${repo.forks_count}
+              </span>
+            </div>
+          </div>
+        </div>` 
+    }
+    // Add entry group to repos list
+    document.getElementById('repos').innerHTML += output
+    // Save startingRepoIdx to call load more
+    this.currentRepoIdx += this.numRepoStartingEntries
   }
   // ----------------------------------------------
   // Show Repos
-  showRepos(repos) {
+  showMoreRepos(repos, startingRepoIdx) {
+    // Instantiate
     let output = ''
-    repos.forEach((repo) => {
+    let IdxProgress
+    // Decide Index Progression for edge cases where there are not 5 remaining repos
+    if (repos.length < startingRepoIdx + this.numRepoLoadMore) {
+      IdxProgress = repos.length - startingRepoIdx
+    } 
+    else  {
+      IdxProgress = this.numRepoLoadMore
+    }
+    // Add 5 entries to display
+    for (let i=startingRepoIdx; i<startingRepoIdx + IdxProgress; i++)  {
+      // Current idx in repos array
+      let repo = repos[i]
+      // Add entry html to output temp
       output += `
-      <div class="card card-body mb-2">
-        <div class="row">
-          <div class="col-md-6">
-            <a href="${repo.html_url}" target="blank"></a>
-            ${repo.name}
+        <div class="card card-body mb-2">
+          <div class="row">
+            <div class="col-md-6">
+              <a href="${repo.html_url}" target="blank"></a>
+              ${repo.name}
+            </div>
+            <div class="col-md-6">
+              <span class="badge badge-primary mb-2">
+                Public Gists: ${repo.stargazers_count}
+              </span>
+              <span class="badge badge-primary mb-2">
+                Followers: ${repo.watchers}
+              </span>
+              <span class="badge badge-primary mb-2">
+                Public Repos: ${repo.forks_count}
+              </span>
+            </div>
           </div>
-          <div class="col-md-6">
-            <span class="badge badge-primary mb-2">
-              Public Gists: ${repo.stargazers_count}
-            </span>
-            <span class="badge badge-primary mb-2">
-              Followers: ${repo.watchers}
-            </span>
-            <span class="badge badge-primary mb-2">
-              Public Repos: ${repo.forks_count}
-            </span>
-          </div>
-        </div>
-      </div>
-    `}
-    )
-    document.getElementById('repos').innerHTML = output
+        </div>` 
+    }
+    // Add entry group to repos list
+    document.getElementById('repos').innerHTML += output
+    // Save startingRepoIdx to call load more
+    this.currentRepoIdx += IdxProgress
   }
-
   // ----------------------------------------------
   // Show Alert Message
   showAlert(message, className) {
@@ -85,7 +147,6 @@ class UI {
     const search = document.querySelector('.search')
     // Insert Alert 
     container.insertBefore(div, search)
-
     // Timeout after 3 seconds
     setTimeout(()=>{this.clearAlert()}, 1000)
   }
@@ -103,7 +164,9 @@ class UI {
     this.profile.innerHTML = ''
   }
 }
-
+// ----------------------------------------------
+// ----------------------------------------------
+// ----------------------------------------------
 // Debugging Code
   // console.log('Showing Profile')
   // console.log('public repos', user.public_repos)
